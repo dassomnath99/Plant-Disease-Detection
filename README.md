@@ -62,4 +62,8 @@ The model is a **custom-designed 6-block CNN** built with **TensorFlow/Keras**, 
 
 ### 1. Environment Setup
 ```bash
+git clone https://github.com/dassomnath99/custom-cnn
+virtualenv .venv
+.venv/Scripts/activate 
 pip install tensorflow opencv-python numpy pandas matplotlib scikit-learn jupyter
+jupyter notebook Custom_cnn.ipynb
