@@ -58,24 +58,6 @@ The model is a **custom-designed 6-block CNN** built with **TensorFlow/Keras**, 
 
 ---
 
-## 📁 Repository Structure
-dataset/
-├── train/
-│   ├── healthy/
-│   ├── apple_scab/
-│   ├── black_rot/
-│   └── cedar_rust/
-└── validation/
-    ├── healthy/
-    ├── apple_scab/
-    ├── black_rot/
-    └── cedar_rust/
-
-
-> 💡 **Trained weights** are saved as `apple_leaf_disease_custom_cnn_V3.keras` upon successful training.
-
----
-
 ## ▶️ How to Use
 
 ### 1. Environment Setup
