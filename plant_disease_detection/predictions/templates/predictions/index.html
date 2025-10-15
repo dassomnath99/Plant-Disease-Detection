@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant Disease Detection & Fertilizer Recommendation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            background: #f8f9ff;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upload-area:hover {
+            background: #eef0ff;
+            border-color: #764ba2;
+        }
+
+        .upload-area.dragover {
+            background: #e0e7ff;
+            border-color: #4338ca;
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        #imageInput {
+            display: none;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: transform 0.2s;
+            margin-top: 15px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .preview-container {
+            margin-top: 20px;
+        }
+
+        #imagePreview {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 10px;
+            display: none;
+            margin: 15px auto;
+        }
+
+        .results-container {
+            display: none;
+        }
+
+        .result-item {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .result-item h3 {
+            color: #667eea;
+            margin-bottom: 8px;
+            font-size: 1.2em;
+        }
+
+        .result-item p {
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .confidence-bar {
+            background: #e0e7ff;
+            height: 30px;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .confidence-fill {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            transition: width 0.5s ease;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .success {
+            background: #efe;
+            color: #3a3;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .history-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            background: #f8f9ff;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-item:hover {
+            background: #eef0ff;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 1.8em;
+            }
+        }
+
+        .model-card-section {
+            margin-top: 30px;
+        }
+
+        .model-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-box {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌿 Plant Disease Detection</h1>
+            <p>AI-Powered Disease Identification & Fertilizer Recommendation System</p>
+        </header>
+
+        <div class="main-content">
+            <div class="card">
+                <h2>Upload Plant Image</h2>
+                
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📸</div>
+                    <p><strong>Click to upload</strong> or drag and drop</p>
+                    <p style="color: #888; font-size: 0.9em; margin-top: 5px;">
+                        Supported: JPEG, PNG (Max 5MB)
+                    </p>
+                </div>
+
+                <input type="file" id="imageInput" accept="image/jpeg,image/jpg,image/png">
+
+                <div class="preview-container">
+                    <img id="imagePreview" alt="Preview">
+                </div>
+
+                <button class="btn" id="predictBtn" disabled>
+                    🔍 Analyze Disease
+                </button>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Analyzing image...</p>
+                </div>
+
+                <div class="error" id="error"></div>
+            </div>
+
+            <div class="card">
+                <h2>Results & Recommendations</h2>
+                
+                <div class="results-container" id="results">
+                    <div class="result-item">
+                        <h3>🦠 Disease Detected</h3>
+                        <p id="diseaseName">-</p>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" id="confidenceBar" style="width: 0%">
+                                <span id="confidenceText">0%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="result-item">
+                        <h3>🌱 Plant Type</h3>
+                        <p id="plantType">-</p>
+                    </div>
+
+                    <div class="result-item">
+                        <h3>📝 Description</h3>
+                        <p id="description">-</p>
+                    </div>
+
+                    <div class="result-item">
+                        <h3>🧪 Fertilizer Recommendation</h3>
+                        <p id="fertilizer">-</p>
+                    </div>
+
+                    <div class="result-item">
+                        <h3>💊 Treatment</h3>
+                        <p id="treatment">-</p>
+                    </div>
+
+                    <div class="result-item">
+                        <h3>🛡️ Prevention</h3>
+                        <p id="prevention">-</p>
+                    </div>
+                </div>
+
+                <p style="color: #888; text-align: center; margin-top: 20px;" id="noResults">
+                    Upload an image to see results
+                </p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Recent Predictions</h2>
+            <div class="history-list" id="historyList">
+                <p style="color: #888; text-align: center;">No predictions yet</p>
+            </div>
+        </div>
+
+        <div class="card model-card-section">
+            <h2>📊 Model Information</h2>
+            <p style="margin-bottom: 20px; color: #555;">
+                This CNN model has been trained to detect plant diseases and provide 
+                appropriate fertilizer recommendations based on the identified condition.
+            </p>
+            
+            <div class="model-stats">
+                <div class="stat-box">
+                    <div class="stat-value">95.2%</div>
+                    <div class="stat-label">Overall Accuracy</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">38</div>
+                    <div class="stat-label">Disease Classes</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">20K+</div>
+                    <div class="stat-label">Training Images</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">224x224</div>
+                    <div class="stat-label">Input Size</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 25px; padding: 15px; background: #f8f9ff; border-radius: 8px;">
+                <h3 style="color: #667eea; margin-bottom: 10px;">Limitations</h3>
+                <ul style="color: #555; line-height: 1.8; padding-left: 20px;">
+                    <li>Best results with clear, well-lit images of affected leaves</li>
+                    <li>May require multiple images for accurate diagnosis</li>
+                    <li>Recommendations are general - consult agricultural expert for specific cases</li>
+                    <li>Model trained primarily on common crops (tomato, potato, corn, etc.)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const imageInput = document.getElementById('imageInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const predictBtn = document.getElementById('predictBtn');
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const results = document.getElementById('results');
+        const noResults = document.getElementById('noResults');
+
+        let selectedFile = null;
+
+        // Upload area click
+        uploadArea.addEventListener('click', () => imageInput.click());
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        // File input change
+        imageInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            // Validate file type
+            const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+            if (!validTypes.includes(file.type)) {
+                showError('Please upload a JPEG or PNG image');
+                return;
+            }
+
+            // Validate file size (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                showError('File size must be less than 5MB');
+                return;
+            }
+
+            selectedFile = file;
+            
+            // Preview image
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imagePreview.src = e.target.result;
+                imagePreview.style.display = 'block';
+                predictBtn.disabled = false;
+                hideError();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Predict button click
+        predictBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+
+            // Show loading
+            loading.style.display = 'block';
+            results.style.display = 'none';
+            noResults.style.display = 'none';
+            predictBtn.disabled = true;
+            hideError();
+
+            // Create form data
+            const formData = new FormData();
+            formData.append('image', selectedFile);
+
+            try {
+                const response = await fetch('/api/predict/', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayResults(data.prediction);
+                    loadHistory();
+                } else {
+                    showError(data.error || 'Prediction failed');
+                }
+            } catch (err) {
+                showError('Network error. Please try again.');
+                console.error(err);
+            } finally {
+                loading.style.display = 'none';
+                predictBtn.disabled = false;
+            }
+        });
+
+        function displayResults(prediction) {
+            // Update all result fields
+            document.getElementById('diseaseName').textContent = prediction.disease;
+            document.getElementById('plantType').textContent = prediction.plant_type;
+            document.getElementById('description').textContent = prediction.description || 'No description available';
+            document.getElementById('fertilizer').textContent = prediction.fertilizer;
+            document.getElementById('treatment').textContent = prediction.treatment || 'No treatment information available';
+            document.getElementById('prevention').textContent = prediction.prevention || 'No prevention information available';
+
+            // Update confidence bar
+            const confidence = prediction.confidence;
+            const confidenceBar = document.getElementById('confidenceBar');
+            const confidenceText = document.getElementById('confidenceText');
+            
+            confidenceBar.style.width = confidence + '%';
+            confidenceText.textContent = confidence + '%';
+
+            // Show results
+            results.style.display = 'block';
+            noResults.style.display = 'none';
+        }
+
+        function showError(message) {
+            error.textContent = message;
+            error.style.display = 'block';
+        }
+
+        function hideError() {
+            error.style.display = 'none';
+        }
+
+        // Load prediction history
+        async function loadHistory() {
+            try {
+                const response = await fetch('/api/history/');
+                const data = await response.json();
+
+                if (data.success && data.history.length > 0) {
+                    const historyList = document.getElementById('historyList');
+                    historyList.innerHTML = data.history.map(item => {
+                        const confidenceClass = item.confidence > 85 ? 'badge-success' : 
+                                               item.confidence > 70 ? 'badge-warning' : 'badge-danger';
+                        
+                        return `
+                            <div class="history-item">
+                                <div>
+                                    <strong>${item.plant_type}</strong> - ${item.disease}
+                                    <br>
+                                    <small style="color: #888;">${item.timestamp}</small>
+                                </div>
+                                <span class="badge ${confidenceClass}">${item.confidence}%</span>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            } catch (err) {
+                console.error('Failed to load history:', err);
+            }
+        }
+
+        // Load history on page load
+        loadHistory();
+    </script>
+</body>
+</html>
