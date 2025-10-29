@@ -121,7 +121,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -134,5 +133,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOW_ALL_ORIGINS = True
 
-# MODEL_PATH = os.path.join(BASE_DIR, 'models', 'plant_disease_model.h5')
-# MAX_UPLOAD_SIZE = 5242880  # 5MB
+MODEL_PATH = os.path.join(BASE_DIR, 'models', 'plant_disease_model.h5')
+MAX_UPLOAD_SIZE = 5242880  # 5MB

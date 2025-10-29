@@ -8,7 +8,7 @@ class PredictionHistory(models.Model):
     predicted_disease = models.CharField(max_length=200)
     confidence = models.FloatField()
     plant_type = models.CharField(max_length=100)
-    fertilizer_recommendation = models.TextField()
+    fertilizer_recommendation = models.TextField(blank=True)
     treatment_recommendation = models.TextField(blank=True)
     timestamp = models.DateTimeField(default=timezone.now)
 
@@ -22,11 +22,11 @@ class PredictionHistory(models.Model):
 class DiseaseInfo(models.Model):
     disease_name = models.CharField(max_length=200, unique=True)
     description = models.TextField()
-    symptoms = models.TextField()
-    causes = models.TextField()
-    prevention = models.TextField()
-    treatment = models.TextField()
-    fertilizer = models.TextField()
+    symptoms = models.TextField(default='', blank=True)
+    causes = models.TextField(null=True, blank=True)
+    prevention = models.TextField(null=True, blank=True)
+    treatment = models.TextField(null=True, blank=True)
+    fertilizer = models.TextField(null=True, blank=True)
 
     class Meta:
         verbose_name_plural = 'Disease Information'
