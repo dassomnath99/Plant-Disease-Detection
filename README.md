@@ -1,91 +1,88 @@
-# 🌿 Plant Disease Detection System
+# Plant Disease Detection
 
-A comprehensive Django-based web application that leverages an advanced custom Convolutional Neural Network (CNN) for accurate plant disease detection from leaf images.
+A compact deep-learning project to detect and classify diseases in plant leaves from images. The repository contains data preparation, model training, evaluation, and inference utilities suited for quick experiments and reproducible results.
 
-## 🚀 Key Features
+## Features
+- Image preprocessing and augmentation pipelines
+- CNN-based training and transfer-learning support (e.g., ResNet, EfficientNet)
+- Training, validation, and test evaluation scripts
+- Single-image inference CLI
+- Exportable model for deployment
 
-- **🧠 Advanced CNN Architecture** - Multi-block convolutional neural network
-- **⚡ Real-time Prediction** - Instant disease detection from uploaded images
-- **🎯 High Accuracy** - Batch normalization and dropout for optimal performance
-- **📱 User-Friendly Interface** - Clean, responsive web design
-- **📊 Detailed Analytics** - Confidence scores and disease information
+## Requirements
+- Python 3.9+
+- GPU recommended for training
+- Key Python packages: numpy, pandas, torch (or tensorflow), torchvision (or tf.keras), Pillow, scikit-learn, matplotlib
 
-## 📁 Project Structure
-
-plant-disease-detection/
-│
-├── model_training/ # CNN Model Development
-│ ├── train_model.py # Main training script
-│ ├── model_architecture.py # CNN architecture definition
-│ ├── data_preprocessing.py # Image preprocessing utilities
-│ ├── requirements.txt # Python dependencies
-│ └── dataset/ # Training dataset
-│ ├── train/
-│ ├── validation/
-│ └── test/
-│
-├── disease_detection/ # Django Web Application
-│ ├── manage
-
-
-## 🧠 Enhanced CNN Architecture
-
-### Model Features:
-- **4 Convolutional Blocks** with increasing complexity
-- **Batch Normalization** after each conv layer
-- **Progressive Dropout** (0.25 → 0.5)
-- **Dense Layers** with 512 and 256 units
-- **Softmax Output** for multi-class classification
-
-### Block Structure:
-Input (224x224x3)
-├── Conv2D (64) → BatchNorm → Conv2D (64) → BatchNorm → MaxPool → Dropout
-├── Conv2D (128) → BatchNorm → Conv2D (128) → BatchNorm → MaxPool → Dropout
-├── Conv2D (256) → BatchNorm → Conv2D (256) → BatchNorm → MaxPool → Dropout
-├── Conv2D (512) → BatchNorm → Conv2D (512) → BatchNorm → MaxPool → Dropout
-└── Dense(512) → Dense(256) → Output(num_classes)
-
-
-## ⚡ Quick Start
-
-### 1. Train Enhanced CNN Model
+Install:
 ```bash
-cd model_training
+python -m venv .venv
+.venv/Scripts/activate        # Windows
 pip install -r requirements.txt
-python train_model.py```
+```
 
-### 2. Launch Django App
+
+## Quickstart — Training
+Train with sensible defaults; scripts accept config/CLI args:
 ```bash
-cd ../disease_detection
-python manage.py runserver```
+python train.py --data ./dataset --model resnet50 --epochs 30 --batch-size 32 --lr 1e-4 --output ./models
+```
+Outputs:
+- Best model checkpoint (./models)
+- Training logs and metrics (tensorboard or CSV)
 
-###🛠️ Tech Stack 
+## Evaluation
+Evaluate a saved checkpoint on the test set:
+```bash
+python evaluate.py --data ./dataset/test --checkpoint ./models/best.pth --batch-size 32
+```
+Produces:
+- Accuracy, precision, recall, F1 per class
+- Confusion matrix and sample prediction plots
 
-    Deep Learning: TensorFlow/Keras with Custom CNN
-    Backend: Django
-    Frontend: Bootstrap, JavaScript
-    Image Processing: OpenCV, Pillow
-     
+## Inference
+Predict a single image:
+```bash
+python predict.py --image ./examples/leaf.jpg --checkpoint ./models/best.pth --labels labels.txt
+```
+Returns predicted class and confidence.
 
-###📊 Model Specifications 
+## Model & Training Notes
+- Use transfer learning when dataset is small.
+- Apply augmentations: random crop, flip, color jitter.
+- Normalize images with ImageNet mean/std if using pretrained weights.
+- Monitor overfitting; use early stopping and learning-rate scheduling.
 
-    Input: 224x224 RGB images
-    Layers: 4 Conv blocks + 2 Dense layers
-    Regularization: BatchNorm + Dropout
-    Activation: ReLU + Softmax
-    Classes: 38 plant diseases
-     
+## Project Structure (suggested)
+```
+.
+├─ data/                 # raw and processed dataset
+├─ notebooks/            # experiments and visualizations
+├─ src/
+│  ├─ train.py
+│  ├─ evaluate.py
+│  ├─ predict.py
+│  ├─ data_loader.py
+│  └─ models.py
+├─ django_app/          # Django web application
+│  ├─ manage.py
+│  ├─ requirements.txt
+│  ├─ api/             # REST API endpoints
+│  ├─ templates/       # HTML templates
+│  ├─ static/         # CSS, JS, images
+│  └─ media/          # Uploaded images
+├─ models/             # saved checkpoints
+├─ requirements.txt
+└─ README.md
+```
 
-###🔧 Requirements 
-tensorflow>=2.8
-django>=3.2
-pillow
-numpy
-opencv-python
+## Tips
+- Start with a small subset to validate pipeline.
+- Use mixed precision and multiple GPUs for speed.
+- Log experiments (Weights & Biases, TensorBoard).
 
-### 🌐 Usage 
+## Contributing
+Submit issues and pull requests. Include unit tests for new modules and keep changes modular.
 
-1. Upload leaf image
-2. Advanced CNN processes the image
-3. Get instant disease prediction
-     
+## License
+MIT License — see LICENSE file.
