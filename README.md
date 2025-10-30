@@ -77,13 +77,10 @@ Others Crops (19 classes)
 <div align="center">
 
 ### Upload Interface
-*Drag & drop or click to upload plant images*
-
-### Disease Analysis
-*Real-time CNN inference with confidence scores*
+![Upload Interface](screenshots/upload.png)
 
 ### Results & Recommendations
-*Detailed disease information with treatment guidance*
+![Results](screenshots/disease_result.png)
 
 </div>
 
@@ -528,7 +525,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **Somnath Das**
 
 - GitHub: [@dassomnath99](https://github.com/dassomnath99)
-- LinkedIn: [Your LinkedIn](https://linkedin.com/in/dassomnath99)
+- LinkedIn: [@dassomnath99](https://linkedin.com/in/dassomnath99)
 - Email: somnathdas4462@gmail.com
 
 ## 🙏 Acknowledgments
@@ -553,16 +550,6 @@ If you have any questions or need help, please:
 2. Open a new issue with detailed description
 3. Contact via email
 
-## 🗺️ Roadmap
-
-- [ ] Add support for more crop types
-- [ ] Implement multi-disease detection
-- [ ] Add weather integration
-- [ ] Create mobile apps (iOS & Android)
-- [ ] Add user authentication
-- [ ] Implement real-time video analysis
-- [ ] Add multilingual support
-- [ ] Create farmer community features
 
 ## ⭐ Star History
 
