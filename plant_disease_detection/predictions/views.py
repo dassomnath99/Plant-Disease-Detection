@@ -141,4 +141,128 @@ def get_fertilizer_recommendation(disease_name, plant_type):
 @csrf_exempt
 @require_http_methods(['POST'])
 def predict_disease(request):
-    pass
+    if MODEL is None:
+        return JsonResponse({
+            'error': 'Model not loaded. Please contact Administrator.'
+        }, status=500)
+    
+    if 'image' not in request.FILES:
+        return JsonResponse({
+            'error': 'No image file provided.'
+        }, status=400)
+    
+    image_file = request.FILES['image']
+
+    if image_file.size > settings.MAX_UPLOAD_SIZE:
+        return JsonResponse({
+            'error':f'File size exceeds maximum limit of {settings.MAX_UPLOAD_SIZE // (1024*1024)}MB.'
+        }, status=400)
+    try:
+        preprocessed_image = preprocess_image(image_file)
+
+        predictions = MODEL.predict(preprocessed_image)
+
+        predicted_class_index = np.argmax(predictions, axis=1)[0]
+        predicted_class_name = CLASS_NAMES[predicted_class_index]
+        confidence = float(predictions[0][predicted_class_index])
+
+        # Get Disease Name
+        if len(CLASS_NAMES) > predicted_class_index:
+            disease_name = CLASS_NAMES[predicted_class_index]
+        else:
+            disease_name = f"Class_{predicted_class_index}"
+
+        #Extract plant type from disease name 
+        plant_type = disease_name.split('_')[0] if '_' in disease_name else "Unknown"
+
+        # Get fertilizer recommendation
+        recommendation = get_fertilizer_recommendation(disease_name, plant_type)
+
+        image_file.seek(0)
+
+        # Build kwargs only for fields that exist on the PredictionHistory model
+        model_field_names = {
+            f.name for f in PredictionHistory._meta.get_fields()
+            if not (getattr(f, 'many_to_many', False) or getattr(f, 'one_to_many', False))
+        }
+
+        # Candidate names mapping to try for common field name variants
+        candidates = {
+            'image': ['image', 'img', 'photo', 'image_file'],
+            'predict_disease': ['predict_disease', 'predicted_disease', 'disease', 'prediction'],
+            'confidence': ['confidence', 'conf', 'probability'],
+            'plant_type': ['plant_type', 'plant', 'plant_name'],
+            'fertilizer_recommendation': ['fertilizer_recommendation', 'fertilizer', 'fertilizer_rec'],
+            'treatment_recommendation': ['treatment_recommendation', 'treatment', 'treatment_rec'],
+        }
+
+        data_values = {
+            'image': image_file,
+            'predict_disease': disease_name,
+            'confidence': confidence,
+            'plant_type': plant_type,
+            'fertilizer_recommendation': recommendation.get('fertilizer', ''),
+            'treatment_recommendation': recommendation.get('treatment', ''),
+        }
+
+        create_kwargs = {}
+        for key, alt_names in candidates.items():
+            for name in alt_names:
+                if name in model_field_names:
+                    create_kwargs[name] = data_values[key]
+                    break
+
+        # Try to create using matched kwargs; if that fails, create a blank record and set attributes directly
+        try:
+            prediction_record = PredictionHistory.objects.create(**create_kwargs)
+        except TypeError:
+            prediction_record = PredictionHistory.objects.create()
+            for k, v in create_kwargs.items():
+                if hasattr(prediction_record, k):
+                    setattr(prediction_record, k, v)
+            prediction_record.save()
+
+        return JsonResponse({
+            'success': True,
+            'prediction':{
+                'disease': disease_name,
+                'confidence': round(confidence*100,2),
+                'plant_type': plant_type,
+                'description': recommendation.get('description',''),
+                'fertilizer_recommendation': recommendation.get('fertilizer',''),
+                'treatment_recommendation': recommendation.get('treatment',''),
+                'prevention_recommendation': recommendation.get('prevention','')
+            },
+            'prediction_id': prediction_record.id
+        })
+    except ValueError as e:
+        return JsonResponse({
+            'error': str(e)
+        }, status=400)
+    
+    except Exception as e:
+        return JsonResponse({
+            'error': f'An error occurred during prediction: {e}'
+        }, status=500)
+    
+def index(request):
+    return render(request, 'predictions/index.html')
+
+@require_http_methods(['GET'])
+def get_history(request):
+    limit = int(request.GET.get('limit', 10))
+    predictions = PredictionHistory.objects.all()[:limit]
+
+    history = [{
+        'id': pred.id,
+        'disease': pred.predict_disease,
+        'confidence': round(pred.confidence*100,2),
+        'plant_type': pred.plant_type,
+        'timestamp': pred.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+        'image_url': pred.image.url if pred.image else ''
+    } for pred in predictions]
+
+    return JsonResponse({
+        'success': True,
+        'history': history
+    })
